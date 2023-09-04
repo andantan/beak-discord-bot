@@ -1,5 +1,5 @@
 # Import json files include Initialize data
-token.json
+*.json
 
 # Editors
 .vscode/
