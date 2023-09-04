@@ -1,5 +1,5 @@
 # Import json files include Initialize data
-.json
+*.json
 
 # Editors
 .vscode/
