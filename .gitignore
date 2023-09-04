@@ -1,3 +1,6 @@
+# Import json files include Initialize data
+.json
+
 # Editors
 .vscode/
 .idea/
