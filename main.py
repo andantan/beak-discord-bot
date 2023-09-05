@@ -29,8 +29,10 @@ async def on_ready() -> None:
 
         print(f"Synced {len(synced)} commands")
 
-    except Exception as e:
-        print(e)
+    except Exception as ero:
+        print(ero, ero.__module__, ero.__class__.__name__, sep="\n")
+
+        sys.exit(-1)
 
 
 @tree.command(name="ping", description="send pong")
