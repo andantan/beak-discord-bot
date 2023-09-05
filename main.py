@@ -22,6 +22,7 @@ async def on_ready() -> None:
     try:
         synced = await bot.tree.sync()
         
+        print("Beak connected")
         print(f"Synced {len(synced)} commands")
 
     except Exception as e:
