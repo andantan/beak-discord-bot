@@ -21,6 +21,11 @@ tree = bot.tree
 async def on_ready() -> None:
     try:
         synced = await bot.tree.sync()
+<<<<<<< HEAD
+=======
+        
+        print("Beak connected")
+>>>>>>> Qbean
         print(f"Synced {len(synced)} commands")
 
     except Exception as e:
