@@ -36,19 +36,18 @@ async def beak_ping(interaction: Interaction, param1: str, param2: str) -> None:
     await interaction.response.send_message(f"pong! {param1}-{param2}")
 
 
-
 if __name__ == "__main__":
     from Config.Initialize.config import (config_args, config_envs)
     from Config.Initialize.vars import ArgumentsNamespace
 
     args: ArgumentsNamespace = config_args()
     
-    config_envs()
+    config_envs(arguments=args)
 
     if _TOKEN := os.getenv("TOKEN"):
         try:
             bot.run(token=_TOKEN)
-
+        
         except discord.LoginFailure as e:
             logging.fatal(msg=repr(e))
 
