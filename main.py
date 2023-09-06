@@ -14,32 +14,71 @@ from discord.ext import commands
 
 from Config.Initialize.config import config_envs
 
+from Error.exceptions import ConfigException
 
-config_envs()
+from Tools.printer import boot_issue
+from Tools.converter import str2bool
 
+try:
+    config_envs()
 
-if DEFAULT_COMMAND_PREFIX := os.getenv("DEFAULT_COMMAND_PREFIX"):
-    bot = commands.Bot(
-        command_prefix = DEFAULT_COMMAND_PREFIX,
-        intents = Intents.all()
-    )
+    PATCH_MODE = str2bool(os.getenv("PATCH"))
+    DEBUG_MODE = str2bool(os.getenv("DEBUG"))
+    NORMAL_MODE = not(PATCH_MODE | DEBUG_MODE)
 
-    tree = bot.tree
-else:
+    if DEFAULT_COMMAND_PREFIX := os.getenv("DEFAULT_COMMAND_PREFIX"):
+        bot = commands.Bot(
+            command_prefix = DEFAULT_COMMAND_PREFIX,
+            intents = Intents.all()
+        )
+
+        tree = bot.tree
+    else:
+        boot_issue(
+            print_message = f"VariableMissing(\'Environment variable does not exist.\')",
+            log_message = "\DEFAULT_COMMAND_PREFIX variable does not exist in the .env file.\nSystem exited returns -1.",
+            sys_exit = True
+        )
+except ConfigException.ArgumentDuplication as ero:
     boot_issue(
-        print_message = f"VariableMissing(\'Environment variable does not exist.\')",
-        log_message = "\DEFAULT_COMMAND_PREFIX variable does not exist in the .env file.\nSystem exited returns -1.",
+        print_message = "Choose only one of mode [\'-d\', \'--debug\'] | \'-p\', \'--patch\']",
+        log_message = None,
         sys_exit = True
     )
+
+except Exception as ero:
+    print(ero, ero.__module__, ero.__class__.__name__, sep="\n")
+
+    sys.exit(-1)
 
 
 @bot.event
 async def on_ready() -> None:
     try:
-        synced = await bot.tree.sync()
+        # synced = await bot.tree.sync()
         await bot.change_presence(status=discord.Status.online)
 
-        print(f"Synced {len(synced)} commands")
+        # print(f"Synced {len(synced)} commands")
+
+        if PATCH_MODE:
+            await bot.change_presence(
+                activity = discord.Game(
+                name = f"서버 패치 및 업데이트"
+                )
+            )
+        elif DEBUG_MODE:
+            await bot.change_presence(
+                activity = discord.Game(
+                name = f"서버 점검"
+                )
+            )
+        else:
+            await bot.change_presence(
+                activity = discord.Activity(
+                    type = discord.ActivityType.listening,
+                    name = f"{DEFAULT_COMMAND_PREFIX}도움"
+                )
+            )
 
     except Exception as ero:
         print(ero, ero.__module__, ero.__class__.__name__, sep="\n")
@@ -55,8 +94,6 @@ async def beak_ping(interaction: Interaction, param1: str, param2: str) -> None:
 
 if __name__ == "__main__":
     if _TOKEN := os.getenv("TOKEN"):
-        from Tools.printer import boot_issue
-
         try:
             bot.run(token=_TOKEN)
         

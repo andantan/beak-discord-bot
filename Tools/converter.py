@@ -1,10 +1,7 @@
 def str2bool(value: str) -> bool:
-    true_values = ("true", "1")
-    false_values = ("false", "0")
-
-    value = value.lower()
-
-    if value in true_values:    return True
-    elif value in false_values: return False
-    elif value is None:         raise TypeError
-    else:                       raise ValueError
+    v = value.lower()
+    
+    if v  in ("true", "1"): return True
+    elif v in ("false", "0"): return False
+    elif v is None: raise TypeError
+    else: raise ValueError
