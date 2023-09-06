@@ -6,6 +6,8 @@ import argparse
 from types import FrameType
 from typing import (List, Dict, Any)
 
+from Error.exceptions import ConfigException
+
 
 def _config_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -17,7 +19,7 @@ def _config_args() -> argparse.Namespace:
         dest="DEBUG",
         action="store_true",
         required=False,
-        help="Run beak as debug mode - Only admin can execute commands"
+        help="[Run-mode] Run beak as debug mode - Only admin can execute commands"
     )
 
     parser.add_argument(
@@ -25,7 +27,7 @@ def _config_args() -> argparse.Namespace:
         dest="PATCH",
         action="store_true",
         required=False,
-        help="Run beak as patch mode - User can execute commands except play command"
+        help="[Run-mode] Run beak as patch mode - User can execute commands except play command"
     )
 
     return parser.parse_args()
@@ -41,13 +43,17 @@ def config_envs() -> None:
     caller: str = _g.get("__name__")
 
     if not caller.__eq__(_allowed_module):
-        from Error.exceptions import NotAllowedModule
-
-        raise NotAllowedModule(called=caller, allowed=_allowed_module)
+        raise ConfigException.NotAllowedModule(called=caller, allowed=_allowed_module)
     
-    args: argparse.Namespace = _config_args()
+    from Tools.converter import str2bool
+
+    arg_namespace: argparse.Namespace = _config_args()
+    args: Dict[str, Any] = arg_namespace.__dict__
+
+    if args.__getitem__("PATCH") & args.__getitem__("DEBUG"):
+        raise ConfigException.ArgumentDuplication
 
     dotenv.load_dotenv(verbose=True)
 
-    for _k, _v in args.__dict__.items():
+    for _k, _v in args.items():
         os.environ.setdefault(_k, str(_v))
