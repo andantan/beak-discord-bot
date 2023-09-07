@@ -41,7 +41,7 @@ try:
             sys_exit = True
         )
 
-except ConfigException.ArgumentDuplication as ero:
+except ConfigException.ArgumentConflict as ero:
     boot_issue(
         print_message = "Choose only one of mode \n\t[\'-d\', \'--debug\'] |\n\t\'-p\', \'--patch\']",
         log_message = None,
