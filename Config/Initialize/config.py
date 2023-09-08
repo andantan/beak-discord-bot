@@ -4,13 +4,18 @@ import dotenv
 import argparse
 
 from types import FrameType
-from typing import (List, Dict, Set, Tuple, Any, TypeAlias, Union)
+from typing import (
+    List, Dict, Set, 
+    Tuple, Any, TypedDict, 
+    TypeAlias, Required, Union
+)
+
 
 from Error.exceptions import ConfigException
 
 
 ArgumentType: TypeAlias = Union[int, float, str, bool, None]
-ActionPair: TypeAlias = Dict[str, List[str]]
+ActionPair: TypeAlias = Dict[str, TypedDict]
 
 
 def _config_args() -> argparse.ArgumentParser:
@@ -35,7 +40,7 @@ def _config_args() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
-        "--file",
+        "-f", "--file",
         dest = "FILE",
         action = "store",
         required = False,
@@ -46,29 +51,30 @@ def _config_args() -> argparse.ArgumentParser:
 
 
 def _parse_args() -> Tuple[argparse.Namespace, ActionPair]:
+    from Class.dataclass import ArgumentOption
+
     _parser: argparse.ArgumentParser = _config_args()
     _namespace: argparse.Namespace = _parser.parse_args()
     _actions: List[argparse.Action] = _parser._actions
 
-    dest_flags_pair: ActionPair = dict()
+    args_pair: ActionPair = dict()
 
     for action in _actions:
         if not isinstance(action, argparse._HelpAction):
-            destination: str = action.dest
-            flags = action.option_strings
-            argument: ArgumentType = _namespace.__getattribute__(destination)
-            argument_type: ArgumentType = type(argument)
-            
-            # TODO: Classifier?
-            # class City(NamedTuple):
-            #     name: str
-            #     population: int
+            _destination: str = action.dest
+            _flags: List[str] = action.option_strings
+            _argument: ArgumentType = _namespace.__getattribute__(_destination)
+            _type = type(_argument)
 
-            print(destination, flags, argument, argument_type, end="\n\n")
+            options = ArgumentOption[_type](
+                flags = _flags,
+                argument = _argument,
+                types = _type
+            )
 
-            dest_flags_pair.__setitem__(destination, flags)
-
-    return (_namespace, dest_flags_pair)
+            args_pair.__setitem__(_destination, options)
+    else:
+        return (_namespace, args_pair, )
     
 
 def config_envs(initialize: bool=False, **kwargs) -> None: 

@@ -63,6 +63,9 @@ except Exception as ero:
 {ero.__module__ if hasattr(ero, '__module__') else ''}\n\
 {ero.__class__.__name__}\
 "
+    import traceback
+
+    print(traceback.format_exc())
 
     boot_issue(
         print_message = ero_msg,
