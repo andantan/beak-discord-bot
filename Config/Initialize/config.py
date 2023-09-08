@@ -6,7 +6,7 @@ import argparse
 from types import FrameType
 from typing import (
     List, Dict, Set, Tuple, 
-    Any, TypeAlias, Union
+    Any, TypeAlias, Union, Optional
 )
 
 from Error.exceptions import ConfigException
@@ -21,6 +21,18 @@ ArgumentType: TypeAlias = Union[int, float, str, bool, None]
 
 
 def _config_args() -> argparse.ArgumentParser:
+    # TODO
+    # import argparse
+
+    # parser = argparse.ArgumentParser()
+    # optional = parser._action_groups.pop() #removes the optional arguments section
+    # group1 = parser.add_argument_group("Required arguments")
+    # group1 = group1.add_mutually_exclusive_group(required=True)
+    # group1.add_argument('--enable',  action='store_true',  help='Enable something')
+    # group1.add_argument('--disable', action='store_false', help='Disable something')
+    # parser._action_groups.append(optional) # add optional arguments section again
+    # args = parser.parse_args()
+
     parser = argparse.ArgumentParser(
         description='Beak discord utility bot arguments'
     )
@@ -42,11 +54,19 @@ def _config_args() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
-        "-f", "--file",
-        dest = "FILE",
-        action = "store",
+        "-j", "--joint",
+        dest = "JOINT",
+        action = "store_true",
         required = False,
-        help = "FOR DEBUGGING"
+        help = "[Run-mode] empty(joint)"
+    )
+
+    parser.add_argument(
+        "-w", "--watch",
+        dest = "FILE",
+        action = "store_true",
+        required = False,
+        help = "[Run-mode] empty(watch)"
     )
     
     return parser
@@ -61,18 +81,16 @@ def _parse_args() -> ActionPairs:
 
     for action in _actions:
         if not isinstance(action, argparse._HelpAction):
-            _destination: str = action.dest
-            _flags: List[str] = action.option_strings
-            _argument: ArgumentType = _namespace.__getattribute__(_destination)
-            _type = type(_argument)
+            _dest: str = action.dest
+            _arg: ArgumentType = _namespace.__dict__[_dest]
 
-            options = ArgumentOption[_type](
-                flags = _flags,
-                argument = _argument,
-                types = _type
+            args_pair[_dest] = ArgumentOption[type(_arg)](
+                dest = _dest,
+                flags = action.option_strings,
+                help = action.help,
+                argument = _arg
             )
 
-            args_pair.__setitem__(_destination, options)
     else:
         return args_pair
     
@@ -84,62 +102,37 @@ def config_envs(initialize: bool=False, **kwargs) -> None:
     _f: FrameType = _fl.__getitem__(0)
     _g: Dict[str, Any] = _f.f_back.f_globals
 
-    caller: str = _g.get("__name__")
+    _caller: str = _g.get("__name__")
 
-    if not caller.__eq__(_allowed_module):
-        raise ConfigException.NotAllowedModule(called=caller, allowed=_allowed_module)
+    if not _caller.__eq__(_allowed_module):
+        raise ConfigException.NotAllowedModule(called=_caller, allowed=_allowed_module)
 
     if initialize:
-        _arg_config_pairs: ArgumentConfigPairs = [
+        _arg_union: ArgumentConfigPairs = [
             {
-                "dest": ("PATCH", "DEBUG", ),
-                "type": (bool)
+                "dest": ("PATCH", "DEBUG", "FILE", "JOINT"),
+                "type": "bool"
             }
         ]
         
         _pair = _parse_args()
 
-        for config_pair in _arg_config_pairs:
-            _duplicate_dest: Tuple[str] = config_pair.__getitem__("dest")
-            _dest_type = config_pair.__getitem__("type")
+        for _arg in _arg_union:
+            match _arg["type"]:
+                case "bool":
+                    _opts: List[ArgumentOption] = [_pair[_dest] for _dest in _arg["dest"]]
 
-            if _dest_type is bool:
-                _arg_basket: List[bool] = list()
+                    if sum([int(_opt.argument) for _opt in _opts]) >= 2:
+                        raise ConfigException.ArgumentConflict(opts=_opts)       
+                case "str" | "int" | "float":
+                    raise NotImplementedError
+                case _:
+                    raise TypeError
 
-                for _dest in _duplicate_dest:
-                    _opt: ArgumentOption = _pair.__getitem__(_dest)
-                    _arg_basket.append(_opt.argument)
+        dotenv.load_dotenv(verbose=True)
 
-                else:
-                    dest_len = len(_duplicate_dest)
-
-                    if dest_len == 2 and all(_arg_basket):
-                        raise ConfigException.ArgumentConflict
-                    
-                    elif dest_len >= 3:
-                        count: int = 0
-
-                        for _basket_element in _arg_basket:
-                            count += int(_basket_element)
-
-                            if count == 2:
-                                raise ConfigException.ArgumentConflict
-                
-            elif _dest_type is str:
-                raise NotImplementedError("_dest_type str type does not implemented")
-            elif _dest_type is int:
-                raise NotImplementedError("_dest_type int type does not implemented")
-            elif _dest_type is float:
-                raise NotImplementedError("_dest_type float type does not implemented")
-            else:
-                raise TypeError
-
-            dotenv.load_dotenv(verbose=True)
-
-            for dest, _opt in _pair.items():
-                argument = _opt.argument
-
-                os.environ.setdefault(dest, str(argument))
+        for _dest, _opt in _pair.items():
+            os.environ.setdefault(_dest, str(_opt.argument))
         
     if kwargs:
         config_env_keys: Set[str] = set(kwargs.keys())

@@ -43,14 +43,15 @@ try:
 
 except ConfigException.ArgumentConflict as ero:
     boot_issue(
-        print_message = "Choose only one of mode \n\t[\'-d\', \'--debug\'] |\n\t\'-p\', \'--patch\']",
+        # print_message = "Choose only one of mode \n\t[\'-d\', \'--debug\'] |\n\t\'-p\', \'--patch\']",
+        print_message = str(ero),
         log_message = None,
         sys_exit = True
     )
 
 except ConfigException.NotAllowedModule as ero:
     boot_issue(
-        print_message = ero,
+        print_message = str(ero),
         log_message = None,
         sys_exit = True
     )

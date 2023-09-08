@@ -1,5 +1,6 @@
-from typing import (Tuple, Union)
+from typing import (List, Tuple, Union)
 
+from Class.dataclass import ArgumentOption
 
 class ConfigException:
     class NotAllowedModule(Exception):
@@ -36,6 +37,17 @@ class ConfigException:
             return tuple(self._allowed_module)
             
             
- 
+    class ArgumentConflict(Exception):
+        def __init__(self, opts: List[ArgumentOption]) -> None:
+            self._opts = opts
 
-    class ArgumentConflict(Exception):...
+            super().__init__()
+
+
+        def __str__(self) -> str:
+            message_prefix: str = "Choose only one of mode"
+
+            for _opt in self._opts:
+                message_prefix += f"\n\t${_opt.flags} | {_opt.help}"
+            else:
+                return message_prefix
