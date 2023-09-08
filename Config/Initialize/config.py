@@ -5,17 +5,19 @@ import argparse
 
 from types import FrameType
 from typing import (
-    List, Dict, Set, 
-    Tuple, Any, TypedDict, 
-    TypeAlias, Required, Union
+    List, Dict, Set, Tuple, 
+    Any, TypeAlias, Union
 )
-
 
 from Error.exceptions import ConfigException
 
+from Class.dataclass import ArgumentOption
 
+
+ActionPairs: TypeAlias = Dict[str, ArgumentOption]
+ArgumentConfigPair: TypeAlias = Dict[str, Tuple]
+ArgumentConfigPairs: TypeAlias = List[Dict[str, Tuple]]
 ArgumentType: TypeAlias = Union[int, float, str, bool, None]
-ActionPair: TypeAlias = Dict[str, TypedDict]
 
 
 def _config_args() -> argparse.ArgumentParser:
@@ -44,20 +46,18 @@ def _config_args() -> argparse.ArgumentParser:
         dest = "FILE",
         action = "store",
         required = False,
-        help = "NOTHING"
+        help = "FOR DEBUGGING"
     )
     
     return parser
 
 
-def _parse_args() -> Tuple[argparse.Namespace, ActionPair]:
-    from Class.dataclass import ArgumentOption
-
+def _parse_args() -> ActionPairs:
     _parser: argparse.ArgumentParser = _config_args()
     _namespace: argparse.Namespace = _parser.parse_args()
     _actions: List[argparse.Action] = _parser._actions
 
-    args_pair: ActionPair = dict()
+    args_pair: ActionPairs = dict()
 
     for action in _actions:
         if not isinstance(action, argparse._HelpAction):
@@ -74,7 +74,7 @@ def _parse_args() -> Tuple[argparse.Namespace, ActionPair]:
 
             args_pair.__setitem__(_destination, options)
     else:
-        return (_namespace, args_pair, )
+        return args_pair
     
 
 def config_envs(initialize: bool=False, **kwargs) -> None: 
@@ -90,32 +90,66 @@ def config_envs(initialize: bool=False, **kwargs) -> None:
         raise ConfigException.NotAllowedModule(called=caller, allowed=_allowed_module)
 
     if initialize:
-        arg_duplicate_pair: List[Tuple[str]] = [
-            ("PATCH", "DEBUG"),
+        _arg_config_pairs: ArgumentConfigPairs = [
+            {
+                "dest": ("PATCH", "DEBUG", ),
+                "type": (bool)
+            }
         ]
         
-        arg_parser: argparse.ArgumentParser
-        arg_action_pair: ActionPair
+        _pair = _parse_args()
 
-        arg_parser, arg_action_pair = _parse_args()
+        for config_pair in _arg_config_pairs:
+            _duplicate_dest: Tuple[str] = config_pair.__getitem__("dest")
+            _dest_type = config_pair.__getitem__("type")
 
-        args: Dict[str, Any] = arg_parser.__dict__
+            if _dest_type is bool:
+                _arg_basket: List[bool] = list()
 
-        if args.__getitem__("PATCH") & args.__getitem__("DEBUG"):
-            raise ConfigException.ArgumentConflict
+                for _dest in _duplicate_dest:
+                    _opt: ArgumentOption = _pair.__getitem__(_dest)
+                    _arg_basket.append(_opt.argument)
 
-        dotenv.load_dotenv(verbose=True)
+                else:
+                    dest_len = len(_duplicate_dest)
 
-        for _k, _v in args.items():
-            os.environ.setdefault(_k, str(_v))
-    
+                    if dest_len == 2 and all(_arg_basket):
+                        raise ConfigException.ArgumentConflict
+                    
+                    elif dest_len >= 3:
+                        count: int = 0
+
+                        for _basket_element in _arg_basket:
+                            count += int(_basket_element)
+
+                            if count == 2:
+                                raise ConfigException.ArgumentConflict
+                
+            elif _dest_type is str:
+                raise NotImplementedError("_dest_type str type does not implemented")
+            elif _dest_type is int:
+                raise NotImplementedError("_dest_type int type does not implemented")
+            elif _dest_type is float:
+                raise NotImplementedError("_dest_type float type does not implemented")
+            else:
+                raise TypeError
+
+            dotenv.load_dotenv(verbose=True)
+
+            for dest, _opt in _pair.items():
+                argument = _opt.argument
+
+                os.environ.setdefault(dest, str(argument))
+        
     if kwargs:
         config_env_keys: Set[str] = set(kwargs.keys())
         env_keys: Set[str] = set(os.environ.keys())
 
         if duplicated_env_keys := env_keys.intersection(config_env_keys):
+            #TODO
             ...
         
         else:
+            #TODO
             ...
 

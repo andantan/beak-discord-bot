@@ -21,7 +21,7 @@ from Tools.converter import str2bool
 
 try:
     config_envs(initialize=True)
-    config_envs(DEBUG=True, NUMBER=30)
+    # config_envs(DEBUG=True, NUMBER=30)
 
     PATCH_MODE = str2bool(os.getenv("PATCH"))
     DEBUG_MODE = str2bool(os.getenv("DEBUG"))
@@ -118,7 +118,7 @@ async def beak_ping(interaction: Interaction, param1: str, param2: str) -> None:
 if __name__ == "__main__":
     if _TOKEN := os.getenv("TOKEN"):
         try:
-            # bot.run(token=_TOKEN)
+            bot.run(token=_TOKEN)
             ...
 
         except discord.LoginFailure as ero:
