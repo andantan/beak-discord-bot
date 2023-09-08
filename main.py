@@ -20,7 +20,8 @@ from Tools.printer import boot_issue
 from Tools.converter import str2bool
 
 try:
-    config_envs()
+    config_envs(initialize=True)
+    # config_envs(DEBUG=True, NUMBER=30)
 
     PATCH_MODE = str2bool(os.getenv("PATCH"))
     DEBUG_MODE = str2bool(os.getenv("DEBUG"))
@@ -39,18 +40,41 @@ try:
             log_message = "\DEFAULT_COMMAND_PREFIX variable does not exist in the .env file.\nSystem exited returns -1.",
             sys_exit = True
         )
-except ConfigException.ArgumentDuplication as ero:
+
+except ConfigException.ArgumentConflict as ero:
     boot_issue(
-        print_message = "Choose only one of mode [\'-d\', \'--debug\'] | \'-p\', \'--patch\']",
+        # print_message = "Choose only one of mode \n\t[\'-d\', \'--debug\'] |\n\t\'-p\', \'--patch\']",
+        print_message = str(ero),
         log_message = None,
         sys_exit = True
     )
 
-except Exception as ero:
-    print(ero, ero.__module__, ero.__class__.__name__, sep="\n")
+except ConfigException.NotAllowedModule as ero:
+    boot_issue(
+        print_message = str(ero),
+        log_message = None,
+        sys_exit = True
+    )
 
     sys.exit(-1)
 
+except Exception as ero:
+    ero_msg: str = f"\
+{ero}\n\
+{ero.__module__ if hasattr(ero, '__module__') else ''}\n\
+{ero.__class__.__name__}\
+"
+    import traceback
+
+    print(traceback.format_exc())
+
+    boot_issue(
+        print_message = ero_msg,
+        log_message = None,
+        sys_exit = True
+    )
+
+    
 
 @bot.event
 async def on_ready() -> None:
@@ -96,7 +120,8 @@ if __name__ == "__main__":
     if _TOKEN := os.getenv("TOKEN"):
         try:
             bot.run(token=_TOKEN)
-        
+            ...
+
         except discord.LoginFailure as ero:
             boot_issue(
                 print_message = f"\n{ero.__doc__}\nSystem exited returns -1.",
