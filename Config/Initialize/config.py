@@ -99,6 +99,7 @@ def config_envs(initialize: bool=False, **kwargs) -> None:
         for kwarg in _namespace._get_kwargs():
             os.environ.setdefault(kwarg[0], str(kwarg[1]))
         
+    #TODO
     if kwargs:
         config_env_keys: Set[str] = set(kwargs.keys())
         env_keys: Set[str] = set(os.environ.keys())
