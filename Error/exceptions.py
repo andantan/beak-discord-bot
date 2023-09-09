@@ -1,6 +1,9 @@
 from typing import (List, Tuple, Union)
 
+from deprecated import deprecated
+
 from Class.dataclass import ArgumentOption
+
 
 class ConfigException:
     class NotAllowedModule(Exception):
@@ -36,7 +39,8 @@ class ConfigException:
             
             return tuple(self._allowed_module)
             
-            
+
+    @deprecated(version="v1.0.5.05", reason="Manually check duplicated argument changed to group argument")
     class ArgumentConflict(Exception):
         def __init__(self, opts: List[ArgumentOption]) -> None:
             self._opts = opts

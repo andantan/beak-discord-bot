@@ -6,7 +6,7 @@ import argparse
 from types import FrameType
 from typing import (
     List, Dict, Set, Tuple, 
-    Any, TypeAlias, Union, Optional
+    Any, TypeAlias, Union
 )
 
 from deprecated import deprecated
