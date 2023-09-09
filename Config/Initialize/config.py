@@ -6,8 +6,10 @@ import argparse
 from types import FrameType
 from typing import (
     List, Dict, Set, Tuple, 
-    Any, TypeAlias, Union, Optional
+    Any, TypeAlias, Union
 )
+
+from deprecated import deprecated
 
 from Error.exceptions import ConfigException
 
@@ -26,12 +28,12 @@ def _config_args() -> argparse.ArgumentParser:
     )
 
     _run_mode_group: argparse._ArgumentGroup = parser.add_argument_group(
-        title = "Beak runtime mode(Required arguments)",
-        description = "Runtime mode for beak-system and beak-server as debugging | patch"
+        title = "Beak runtime mode",
+        description = "Runtime mode for beak-system and beak-server as debugging | patch \n If no options run beak as normal-mode"
     )
 
     _run_mode_ex_group: argparse._MutuallyExclusiveGroup = \
-        _run_mode_group.add_mutually_exclusive_group(required=True)
+        _run_mode_group.add_mutually_exclusive_group(required=False)
 
     _run_mode_ex_group.add_argument(
         "-d", "--debug",
@@ -52,6 +54,7 @@ def _config_args() -> argparse.ArgumentParser:
     return parser
 
 
+@deprecated(version="1.0.5.05", reason="Manually check duplicated argument changed to group argument")
 def _parse_args() -> ActionPairs:
     _parser: argparse.ArgumentParser = _config_args()
     _namespace: argparse.Namespace = _parser.parse_args()
@@ -88,32 +91,15 @@ def config_envs(initialize: bool=False, **kwargs) -> None:
         raise ConfigException.NotAllowedModule(called=_caller, allowed=_allowed_module)
 
     if initialize:
-        _arg_union: ArgumentConfigPairs = [
-            {
-                "dest": ("PATCH", "DEBUG", "FILE", "JOINT"),
-                "type": "bool"
-            }
-        ]
-        
-        _pair = _parse_args()
-
-        for _arg in _arg_union:
-            match _arg["type"]:
-                case "bool":
-                    _opts: List[ArgumentOption] = [_pair[_dest] for _dest in _arg["dest"]]
-
-                    if sum([int(_opt.argument) for _opt in _opts]) >= 2:
-                        raise ConfigException.ArgumentConflict(opts=_opts)       
-                case "str" | "int" | "float":
-                    raise NotImplementedError
-                case _:
-                    raise TypeError
+        _parser: argparse.ArgumentParser = _config_args()
+        _namespace: argparse.Namespace = _parser.parse_args()
 
         dotenv.load_dotenv(verbose=True)
 
-        for _dest, _opt in _pair.items():
-            os.environ.setdefault(_dest, str(_opt.argument))
+        for kwarg in _namespace._get_kwargs():
+            os.environ.setdefault(kwarg[0], str(kwarg[1]))
         
+    #TODO
     if kwargs:
         config_env_keys: Set[str] = set(kwargs.keys())
         env_keys: Set[str] = set(os.environ.keys())
