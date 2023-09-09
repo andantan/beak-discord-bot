@@ -21,23 +21,19 @@ ArgumentType: TypeAlias = Union[int, float, str, bool, None]
 
 
 def _config_args() -> argparse.ArgumentParser:
-    # TODO
-    # import argparse
-
-    # parser = argparse.ArgumentParser()
-    # optional = parser._action_groups.pop() #removes the optional arguments section
-    # group1 = parser.add_argument_group("Required arguments")
-    # group1 = group1.add_mutually_exclusive_group(required=True)
-    # group1.add_argument('--enable',  action='store_true',  help='Enable something')
-    # group1.add_argument('--disable', action='store_false', help='Disable something')
-    # parser._action_groups.append(optional) # add optional arguments section again
-    # args = parser.parse_args()
-
     parser = argparse.ArgumentParser(
         description='Beak discord utility bot arguments'
     )
 
-    parser.add_argument(
+    _run_mode_group: argparse._ArgumentGroup = parser.add_argument_group(
+        title = "Beak runtime mode(Required arguments)",
+        description = "Runtime mode for beak-system and beak-server as debugging | patch"
+    )
+
+    _run_mode_ex_group: argparse._MutuallyExclusiveGroup = \
+        _run_mode_group.add_mutually_exclusive_group(required=True)
+
+    _run_mode_ex_group.add_argument(
         "-d", "--debug",
         dest = "DEBUG",
         action = "store_true",
@@ -45,28 +41,12 @@ def _config_args() -> argparse.ArgumentParser:
         help = "[Run-mode] Run beak as debug mode - Only admin can execute commands"
     )
 
-    parser.add_argument(
+    _run_mode_ex_group.add_argument(
         "-p", "--patch",
         dest = "PATCH",
         action = "store_true",
         required = False,
         help = "[Run-mode] Run beak as patch mode - User can execute commands except play command"
-    )
-
-    parser.add_argument(
-        "-j", "--joint",
-        dest = "JOINT",
-        action = "store_true",
-        required = False,
-        help = "[Run-mode] empty(joint)"
-    )
-
-    parser.add_argument(
-        "-w", "--watch",
-        dest = "FILE",
-        action = "store_true",
-        required = False,
-        help = "[Run-mode] empty(watch)"
     )
     
     return parser
