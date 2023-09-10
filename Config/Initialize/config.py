@@ -11,7 +11,7 @@ from typing import (
 
 from deprecated import deprecated
 
-from Error.exceptions import ConfigException
+from Error.exceptions import (NotAllowedModule, AllocatedEnvironments)
 
 from Class.dataclass import ArgumentOption
 
@@ -88,7 +88,7 @@ def config_envs(initialize: bool=False, **kwargs) -> None:
     _caller: str = _g.get("__name__")
 
     if not _caller.__eq__(_allowed_module):
-        raise ConfigException.NotAllowedModule(called=_caller, allowed=_allowed_module)
+        raise NotAllowedModule(called=_caller, allowed=_allowed_module)
 
     if initialize:
         _parser: argparse.ArgumentParser = _config_args()
@@ -99,16 +99,13 @@ def config_envs(initialize: bool=False, **kwargs) -> None:
         for kwarg in _namespace._get_kwargs():
             os.environ.setdefault(kwarg[0], str(kwarg[1]))
         
-    #TODO
     if kwargs:
         config_env_keys: Set[str] = set(kwargs.keys())
         env_keys: Set[str] = set(os.environ.keys())
 
         if duplicated_env_keys := env_keys.intersection(config_env_keys):
-            #TODO
-            ...
-        
+            raise AllocatedEnvironments(conflicts=duplicated_env_keys)
+            
         else:
-            #TODO
-            ...
-
+            for _k, _v in kwargs.items():
+                os.environ.setdefault(_k, str(_v))
