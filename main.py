@@ -19,6 +19,7 @@ from Error.exceptions import ConfigException
 from Tools.printer import boot_issue
 from Tools.converter import str2bool
 
+
 try:
     config_envs(initialize=True)
     config_envs(NUMBER=30)
@@ -48,8 +49,6 @@ except ConfigException as ero:
         sys_exit = True
     )
 
-    sys.exit(-1)
-
 except Exception as ero:
     ero_msg: str = f"\
 {ero}\n\
@@ -71,10 +70,10 @@ except Exception as ero:
 @bot.event
 async def on_ready() -> None:
     try:
-        # synced = await bot.tree.sync()
+        synced = await bot.tree.sync()
         await bot.change_presence(status=discord.Status.online)
 
-        # print(f"Synced {len(synced)} commands")
+        print(f"Synced {len(synced)} commands")
 
         if PATCH_MODE:
             await bot.change_presence(
@@ -102,17 +101,32 @@ async def on_ready() -> None:
         sys.exit(-1)
 
 
-@tree.command(name="ping", description="send pong")
-@apc.describe(param1 = "text1", param2 = "text2")
-async def beak_ping(interaction: Interaction, param1: str, param2: str) -> None:
-    await interaction.response.send_message(f"pong! {param1}-{param2}")
+@tree.command(name="play", description="유튜브 또는 유튜브 레드 주소로 음원을 재생합니다.")
+@apc.describe(youtube_url = "유튜브 또는 유튜브 레드 주소")
+async def beak_play(interaction: Interaction, youtube_url: str) -> None:
+    await interaction.response.send_message(youtube_url)
+
+
+@tree.command(name="search", description="제목으로 검색하여 음원을 재생합니다.")
+@apc.describe(title = "검색할 제목")
+async def beak_search(interaction: Interaction, title: str) -> None:
+    await interaction.response.send_message(title)
+
+
+@tree.command(name="reset", description="플레이리스트를 초기화합니다.")
+async def beak_reset(interaction: Interaction) -> None:
+    await interaction.response.send_message("reset")
+
+
+@tree.command(name="stop", description="플레이리스트를 정지하고 봇을 퇴장시킵니다.")
+async def beak_stop(interaction: Interaction) -> None:
+    await interaction.response.send_message("stop")
 
 
 if __name__ == "__main__":
     if _TOKEN := os.getenv("TOKEN"):
         try:
-            # bot.run(token=_TOKEN)
-            ...
+            bot.run(token=_TOKEN)
 
         except discord.LoginFailure as ero:
             boot_issue(

@@ -17,8 +17,6 @@ from Class.dataclass import ArgumentOption
 
 
 ActionPairs: TypeAlias = Dict[str, ArgumentOption]
-ArgumentConfigPair: TypeAlias = Dict[str, Tuple]
-ArgumentConfigPairs: TypeAlias = List[Dict[str, Tuple]]
 ArgumentType: TypeAlias = Union[int, float, str, bool, None]
 
 
