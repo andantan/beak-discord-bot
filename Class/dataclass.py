@@ -66,3 +66,16 @@ class GuildProperties:
 
         for _k, _v in attributes.items():
             object.__setattr__(self, _k, _v)
+
+
+    @property
+    def author_connected(self) -> bool: return bool(self.author_vc)
+    @property
+    def beak_connected(self) -> bool: return bool(self.beak_vc)
+    @property
+    def synced(self) -> bool:
+        if not (self.author_connected and self.beak_connected):
+            return False
+        
+        return self.author_vc_id == self.beak_vc_id
+
