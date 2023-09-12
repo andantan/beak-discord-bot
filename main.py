@@ -1,5 +1,6 @@
 import os
 import sys
+import dotenv
 import aiohttp
 
 import discord
@@ -21,8 +22,9 @@ from Tools.converter import str2bool
 
 
 try:
-    config_envs(initialize=True)
-    config_envs(NUMBER=30)
+    dotenv.load_dotenv(verbose=True)
+
+    config_envs()
 
     PATCH_MODE = str2bool(os.getenv("PATCH"))
     DEBUG_MODE = str2bool(os.getenv("DEBUG"))
@@ -103,31 +105,34 @@ async def on_ready() -> None:
 
 @tree.command(name="play", description="유튜브 또는 유튜브 레드 주소로 음원을 재생합니다.")
 @apc.describe(youtube_url = "유튜브 또는 유튜브 레드 주소")
-async def beak_play(interaction: Interaction, youtube_url: str) -> None:
-    await interaction.response.send_message(youtube_url)
+async def beak_play(itc: Interaction, youtube_url: str) -> None:
+    await itc.message.delete()
+
+
+    await itc.response.send_message(youtube_url)
 
 
 @tree.command(name="search", description="제목으로 검색하여 음원을 재생합니다.")
 @apc.describe(title = "검색할 제목")
-async def beak_search(interaction: Interaction, title: str) -> None:
-    await interaction.response.send_message(title)
+async def beak_search(itc: Interaction, title: str) -> None:
+    await itc.response.send_message(title)
 
 
 @tree.command(name="reset", description="플레이리스트를 초기화합니다.")
-async def beak_reset(interaction: Interaction) -> None:
-    await interaction.response.send_message("reset")
+async def beak_reset(itc: Interaction) -> None:
+    await itc.response.send_message(os.getenv("BEAK_IDENTIFICATION"))
 
 
 @tree.command(name="stop", description="플레이리스트를 정지하고 봇을 퇴장시킵니다.")
-async def beak_stop(interaction: Interaction) -> None:
-    await interaction.response.send_message("stop")
+async def beak_stop(itc: Interaction) -> None:
+    await itc.response.send_message("stop")
 
 
 if __name__ == "__main__":
     if _TOKEN := os.getenv("TOKEN"):
         try:
             bot.run(token=_TOKEN)
-
+            ...
         except discord.LoginFailure as ero:
             boot_issue(
                 print_message = f"\n{ero.__doc__}\nSystem exited returns -1.",

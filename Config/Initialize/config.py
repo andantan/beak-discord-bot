@@ -1,6 +1,5 @@
 import os
 import sys
-import dotenv
 import argparse
 
 from types import FrameType
@@ -76,7 +75,7 @@ def _parse_args() -> ActionPairs:
         return args_pair
     
 
-def config_envs(initialize: bool=False, **kwargs) -> None: 
+def config_envs(**kwargs) -> None: 
     _allowed_module: str = "__main__"
 
     _fl: List[FrameType] = list(sys._current_frames().values())
@@ -88,14 +87,16 @@ def config_envs(initialize: bool=False, **kwargs) -> None:
     if not _caller.__eq__(_allowed_module):
         raise NotAllowedModule(called=_caller, allowed=_allowed_module)
 
-    if initialize:
+    from Tools.converter import str2bool
+
+    if not str2bool(os.getenv("INITIALIZED")):
         _parser: argparse.ArgumentParser = _config_args()
         _namespace: argparse.Namespace = _parser.parse_args()
 
-        dotenv.load_dotenv(verbose=True)
-
         for kwarg in _namespace._get_kwargs():
             os.environ.setdefault(kwarg[0], str(kwarg[1]))
+        else:
+            os.environ["INITIALIZED"] = "True"
         
     if kwargs:
         config_env_keys: Set[str] = set(kwargs.keys())
