@@ -117,7 +117,6 @@ async def beak_play(itc: Interaction, youtube_url: str) -> None:
 async def beak_search(itc: Interaction, title: str) -> None:
     await itc.response.send_message(title)
 
-
 @tree.command(name="reset", description="플레이리스트를 초기화합니다.")
 async def beak_reset(itc: Interaction) -> None:
     await itc.response.send_message(os.getenv("BEAK_IDENTIFICATION"))

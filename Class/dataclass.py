@@ -9,7 +9,6 @@ from dataclasses import dataclass, field
 from deprecated import deprecated
 
 from discord import (Guild, Member, Interaction, VoiceState)
-from discord.channel import (VoiceChannel, StageChannel)
 
 T = TypeVar("T")
 
@@ -23,8 +22,8 @@ class ArgumentOption(Generic[T]):
     argument: T
 
 
-@dataclass(frozen=True)
-class GuildProperties:
+@dataclass(slots=True, frozen=True)
+class InteractionProperty:
     itc: Interaction
 
     guild: Guild = field(init=False)
@@ -79,3 +78,9 @@ class GuildProperties:
         
         return self.author_vc_id == self.beak_vc_id
 
+
+@dataclass(slots=True)
+class GuildProperty:
+    guild_id = None
+    player = None
+    message = None
