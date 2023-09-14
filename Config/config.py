@@ -1,6 +1,5 @@
 import os
 import sys
-import dotenv
 import argparse
 
 from types import FrameType
@@ -11,14 +10,12 @@ from typing import (
 
 from deprecated import deprecated
 
-from Error.exceptions import ConfigException
+from Error.exceptions import (NotAllowedModule, AllocatedEnvironments)
 
 from Class.dataclass import ArgumentOption
 
 
 ActionPairs: TypeAlias = Dict[str, ArgumentOption]
-ArgumentConfigPair: TypeAlias = Dict[str, Tuple]
-ArgumentConfigPairs: TypeAlias = List[Dict[str, Tuple]]
 ArgumentType: TypeAlias = Union[int, float, str, bool, None]
 
 
@@ -78,7 +75,7 @@ def _parse_args() -> ActionPairs:
         return args_pair
     
 
-def config_envs(initialize: bool=False, **kwargs) -> None: 
+def config_envs(**kwargs) -> None: 
     _allowed_module: str = "__main__"
 
     _fl: List[FrameType] = list(sys._current_frames().values())
@@ -88,27 +85,26 @@ def config_envs(initialize: bool=False, **kwargs) -> None:
     _caller: str = _g.get("__name__")
 
     if not _caller.__eq__(_allowed_module):
-        raise ConfigException.NotAllowedModule(called=_caller, allowed=_allowed_module)
+        raise NotAllowedModule(called=_caller, allowed=_allowed_module)
 
-    if initialize:
+    from Tools.converter import str2bool
+
+    if not str2bool(os.getenv("INITIALIZED")):
         _parser: argparse.ArgumentParser = _config_args()
         _namespace: argparse.Namespace = _parser.parse_args()
 
-        dotenv.load_dotenv(verbose=True)
-
         for kwarg in _namespace._get_kwargs():
             os.environ.setdefault(kwarg[0], str(kwarg[1]))
+        else:
+            os.environ["INITIALIZED"] = "True"
         
-    #TODO
     if kwargs:
         config_env_keys: Set[str] = set(kwargs.keys())
         env_keys: Set[str] = set(os.environ.keys())
 
         if duplicated_env_keys := env_keys.intersection(config_env_keys):
-            #TODO
-            ...
-        
+            raise AllocatedEnvironments(conflicts=duplicated_env_keys)
+            
         else:
-            #TODO
-            ...
-
+            for _k, _v in kwargs.items():
+                os.environ.setdefault(_k, str(_v))
