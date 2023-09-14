@@ -106,11 +106,7 @@ async def on_ready() -> None:
 @tree.command(name="play", description="유튜브 또는 유튜브 레드 주소로 음원을 재생합니다.")
 @apc.describe(youtube_url = "유튜브 또는 유튜브 레드 주소")
 async def beak_play(itc: Interaction, youtube_url: str) -> None:
-    await itc.message.delete()
-
-
     await itc.response.send_message(youtube_url)
-
 
 @tree.command(name="search", description="제목으로 검색하여 음원을 재생합니다.")
 @apc.describe(title = "검색할 제목")
@@ -130,7 +126,7 @@ async def beak_stop(itc: Interaction) -> None:
 if __name__ == "__main__":
     if _TOKEN := os.getenv("TOKEN"):
         try:
-            bot.run(token=_TOKEN)
+            # bot.run(token=_TOKEN)
             ...
         except discord.LoginFailure as ero:
             boot_issue(

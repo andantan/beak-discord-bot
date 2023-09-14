@@ -4,7 +4,7 @@ from typing import (
     List, Optional, Generic, TypeVar
 )
 
-from dataclasses import dataclass, field
+from dataclasses import (dataclass, field)
 
 from deprecated import deprecated
 
@@ -22,7 +22,7 @@ class ArgumentOption(Generic[T]):
     argument: T
 
 
-@dataclass(slots=True, frozen=True)
+@dataclass(slots=True, frozen=True, kw_only=True)
 class InteractionProperty:
     itc: Interaction
 
@@ -84,3 +84,23 @@ class GuildProperty:
     guild_id = None
     player = None
     message = None
+
+
+
+@dataclass(slots=True, frozen=True, kw_only=True)
+class AudioMetaData:
+    title: Optional[str] = field(default=None)
+    uploader: Optional[str] = field(default=None)
+    duration: Optional[str] = field(default=None)
+
+    original_url: Optional[str] = field(default=None)
+    audio_url: Optional[str] = field(default=None)
+    thumbnail_url: Optional[str] = field(default=None)
+
+
+    @property
+    def purity(self) -> bool:
+        return all([getattr(self, v) for v in self.__slots__])
+    @property
+    def is_dummy(self) -> bool:
+        return not any([getattr(self, v) for v in self.__slots__])
