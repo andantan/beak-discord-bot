@@ -13,7 +13,7 @@ from discord import (
 
 from discord.ext import commands
 
-from Config.Initialize.config import config_envs
+from Config.config import config_envs
 
 from Error.exceptions import ConfigException
 

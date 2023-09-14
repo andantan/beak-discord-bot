@@ -1,14 +1,15 @@
 import os
+import collections
 
-from typing import (
-    List, Optional, Generic, TypeVar
-)
-
-from dataclasses import (dataclass, field)
+from typing import List, Optional, Generic, TypeVar, Any, Self
+from dataclasses import dataclass, field
 
 from deprecated import deprecated
 
-from discord import (Guild, Member, Interaction, VoiceState)
+from discord import Guild, Member, Interaction, VoiceState
+
+from Tools.Decorator.dec import method_dispatch
+
 
 T = TypeVar("T")
 
@@ -104,3 +105,48 @@ class AudioMetaData:
     @property
     def is_dummy(self) -> bool:
         return not any([getattr(self, v) for v in self.__slots__])
+    
+
+@dataclass(slots=True, kw_only=True)
+class PlaylistMetaData(collections.Iterator):
+    playlist_title: str
+    playlist: List[AudioMetaData] = field(default_factory=list, init=False)
+    seek: int = field(default=0, init=False)
+    length: int = field(default=1, init=False)
+
+
+    def __iter__(self) -> Self:
+        return self
+    
+
+    def __next__(self) -> AudioMetaData:
+        if self.seek < self.length:
+            _pointer = self.seek
+            self.seek += 1
+
+            return self.playlist[_pointer]
+        else:
+            raise StopIteration
+
+
+    @method_dispatch
+    def append(self, audio_meta_data: Any) -> None:
+        raise TypeError(f"\"AudioMetaData | List[AudioMetaData]\" types are only allowed, but given {type(audio_meta_data)} type was given")
+
+
+    @append.register(AudioMetaData)
+    def _(self, audio_meta_data: AudioMetaData) -> None:
+        self.playlist.append(audio_meta_data)
+
+
+    @append.register(list)
+    def _(self, audio_meta_data: List[AudioMetaData]) -> None:
+        for element in audio_meta_data:
+            if not isinstance(element, AudioMetaData):
+                raise TypeError(f"\"AudioMetaData | List[AudioMetaData]\" types are only allowed, but given List[{type(element)}, Any] type was given")
+        else:
+            self.playlist = audio_meta_data[:]
+            self.length = len(audio_meta_data)
+
+    
+
