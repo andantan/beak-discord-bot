@@ -108,8 +108,8 @@ class AudioMetaData:
     
 
 @dataclass(slots=True, kw_only=True)
-class PlaylistMetaData(collections.Iterator):
-    playlist_title: str
+class PlaylistMetaData():
+    playlist_title: Optional[str] = field(default=None, init=False)
     playlist: List[AudioMetaData] = field(default_factory=list, init=False)
     seek: int = field(default=0, init=False)
     length: int = field(default=1, init=False)
@@ -137,6 +137,7 @@ class PlaylistMetaData(collections.Iterator):
     @append.register(AudioMetaData)
     def _(self, audio_meta_data: AudioMetaData) -> None:
         self.playlist.append(audio_meta_data)
+        self.length = len(self.playlist)
 
 
     @append.register(list)
@@ -145,8 +146,11 @@ class PlaylistMetaData(collections.Iterator):
             if not isinstance(element, AudioMetaData):
                 raise TypeError(f"\"AudioMetaData | List[AudioMetaData]\" types are only allowed, but given List[{type(element)}, Any] type was given")
         else:
-            self.playlist = audio_meta_data[:]
-            self.length = len(audio_meta_data)
+            self.playlist = self.playlist + audio_meta_data[:]
+            self.length = len(self.playlist)
 
     
+    @property
+    def is_playlist(self) -> bool:
+        return bool(self.playlist_title)
 
