@@ -108,7 +108,7 @@ class AudioMetaData:
     
 
 @dataclass(slots=True, kw_only=True)
-class PlaylistMetaData():
+class PlaylistMetaData(collections.Iterator):
     playlist_title: Optional[str] = field(default=None, init=False)
     playlist: List[AudioMetaData] = field(default_factory=list, init=False)
     seek: int = field(default=0, init=False)
