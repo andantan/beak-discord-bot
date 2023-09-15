@@ -114,6 +114,9 @@ class PlaylistMetaData(collections.Iterator):
     seek: int = field(default=0, init=False)
     length: int = field(default=1, init=False)
 
+    def __len__(self) -> int:
+        return self.length
+
 
     def __iter__(self) -> Self:
         return self
