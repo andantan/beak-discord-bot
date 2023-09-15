@@ -1,7 +1,7 @@
 import os
-import collections
+import collections.abc
 
-from typing import List, Optional, Generic, TypeVar, Any, Self
+from typing import List, Optional, Generic, TypeVar, Any, Dict
 from dataclasses import dataclass, field
 
 from deprecated import deprecated
@@ -91,6 +91,7 @@ class GuildProperty:
 @dataclass(slots=True, frozen=True, kw_only=True)
 class AudioMetaData:
     title: Optional[str] = field(default=None)
+    playlist_title: Optional[str] = field(default=None)
     uploader: Optional[str] = field(default=None)
     duration: Optional[str] = field(default=None)
 
@@ -103,13 +104,16 @@ class AudioMetaData:
     def purity(self) -> bool:
         return all([getattr(self, v) for v in self.__slots__])
     @property
+    def pseudo_dict(self) -> Dict[str, str]:
+        return {k: getattr(self, k) for k in self.__slots__}
+    @property
     def is_dummy(self) -> bool:
         return not any([getattr(self, v) for v in self.__slots__])
+
     
 
 @dataclass(slots=True, kw_only=True)
-class PlaylistMetaData(collections.Iterator):
-    playlist_title: Optional[str] = field(default=None, init=False)
+class PlaylistMetaData(collections.abc.Iterator):
     playlist: List[AudioMetaData] = field(default_factory=list, init=False)
     seek: int = field(default=0, init=False)
     length: int = field(default=1, init=False)
@@ -118,18 +122,9 @@ class PlaylistMetaData(collections.Iterator):
         return self.length
 
 
-    def __iter__(self) -> Self:
-        return self
-    
-
-    def __next__(self) -> AudioMetaData:
-        if self.seek < self.length:
-            _pointer = self.seek
-            self.seek += 1
-
-            return self.playlist[_pointer]
-        else:
-            raise StopIteration
+    def __iter__(self) -> AudioMetaData:
+        for item in self.playlist:
+            yield item
 
 
     @method_dispatch
@@ -152,8 +147,6 @@ class PlaylistMetaData(collections.Iterator):
             self.playlist = self.playlist + audio_meta_data[:]
             self.length = len(self.playlist)
 
-    
-    @property
-    def is_playlist(self) -> bool:
-        return bool(self.playlist_title)
 
+    def unpack(self) -> List[AudioMetaData]:
+        return self.playlist[:]

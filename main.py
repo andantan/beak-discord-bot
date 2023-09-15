@@ -52,11 +52,7 @@ except ConfigException as ero:
     )
 
 except Exception as ero:
-    ero_msg: str = f"\
-{ero}\n\
-{ero.__module__ if hasattr(ero, '__module__') else ''}\n\
-{ero.__class__.__name__}\
-"
+    ero_msg: str = f"\{ero}\n\{ero.__module__ if hasattr(ero, '__module__') else ''}\n\{ero.__class__.__name__}"
     import traceback
 
     print(traceback.format_exc())
@@ -106,6 +102,13 @@ async def on_ready() -> None:
 @tree.command(name="play", description="유튜브 또는 유튜브 레드 주소로 음원을 재생합니다.")
 @apc.describe(youtube_url = "유튜브 또는 유튜브 레드 주소")
 async def beak_play(interaction: Interaction, youtube_url: str) -> None:
+    # from Tools.extractor import YoutubeDlExtractor
+
+    # data = await YoutubeDlExtractor.get_playlist(URL=youtube_url)
+
+    # for d in data:
+    #     print(d)
+
     await interaction.response.send_message(youtube_url)
 
 @tree.command(name="search", description="제목으로 검색하여 음원을 재생합니다.")
@@ -144,11 +147,17 @@ if __name__ == "__main__":
             )
 
         except Exception as ero:
-            boot_issue(
-                print_message = f"{ero}\n{ero.__class__.__name__}\n{ero.__module__}",
-                log_message = None,
-                sys_exit = True
-            )
+                ero_msg: str = f"\{ero}\n\{ero.__module__ if hasattr(ero, '__module__') else ''}\n\{ero.__class__.__name__}"
+
+                import traceback
+
+                print(traceback.format_exc())
+
+                boot_issue(
+                    print_message = ero_msg,
+                    log_message = None,
+                    sys_exit = True
+                )
 
     else:
         boot_issue(
