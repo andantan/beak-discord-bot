@@ -6,6 +6,7 @@ from Class.dataclass import ArgumentOption
 
 
 class ConfigException(Exception): ...
+class DeprecationClassException(DeprecationWarning): ...
 
 
 class NotAllowedModule(ConfigException):
@@ -42,7 +43,12 @@ class NotAllowedModule(ConfigException):
         return tuple(self._allowed_module)
         
 
-@deprecated(version="v1.0.5.05", reason="Manually check duplicated argument changed to group argument")
+@deprecated(
+    version = "v1.0.5.05", 
+    reason = "Manually check duplicated argument changed to group argument",
+    category = DeprecationClassException,
+    action = "error"
+)
 class ArgumentConflict(ConfigException):
     def __init__(self, opts: List[ArgumentOption]) -> None:
         self._opts = opts

@@ -1,5 +1,4 @@
 import os
-import collections.abc
 
 from typing import List, Optional, Generic, TypeVar, Any, Dict
 from dataclasses import dataclass, field
@@ -113,7 +112,7 @@ class AudioMetaData:
     
 
 @dataclass(slots=True, kw_only=True)
-class PlaylistMetaData(collections.abc.Iterator):
+class PlaylistMetaData:
     playlist: List[AudioMetaData] = field(default_factory=list, init=False)
     seek: int = field(default=0, init=False)
     length: int = field(default=1, init=False)
@@ -147,6 +146,6 @@ class PlaylistMetaData(collections.abc.Iterator):
             self.playlist = self.playlist + audio_meta_data[:]
             self.length = len(self.playlist)
 
-
+    @property
     def unpack(self) -> List[AudioMetaData]:
         return self.playlist[:]
