@@ -2,7 +2,7 @@ import asyncio
 
 from concurrent.futures import ThreadPoolExecutor
 
-from typing import List, Dict, Any, Type, TypeVar
+from typing import List, Dict, Any, Type, TypeVar, Optional
 
 
 from yt_dlp import YoutubeDL
@@ -50,9 +50,10 @@ class YoutubeDlExtractor(BlockingInstanctiate):
     @classmethod
     def create_playlist(cls: Type[T], data: Dict[str, Any], URL: str) -> PlaylistMetaData:
 
-        def __get_audio_meta_data(entity: Dict[str, Any], URL: str) -> AudioMetaData:
+        def __get_audio_meta_data(entity: Dict[str, Any], URL: str, playlist_title: Optional[str]) -> AudioMetaData:
             return AudioMetaData(
                     title = entity.get("title"),
+                    playlist_title = playlist_title,
                     uploader = entity.get("uploader"),
                     duration = entity.get("duration"),
                     original_url = URL,
@@ -65,12 +66,12 @@ class YoutubeDlExtractor(BlockingInstanctiate):
         if "playlist" in URL:
             playlist_entities: List[Dict[str, Any]] = data["entries"]
 
-            playlist.playlist_title = playlist_entities[0]["playlist_title"]
+            playlist_title = playlist_entities[0]["playlist_title"]
 
             for entity in playlist_entities:
-                playlist.append(__get_audio_meta_data(entity=entity, URL=URL))
+                playlist.append(__get_audio_meta_data(entity=entity, URL=URL, playlist_title=playlist_title))
                 
         else:
-            playlist.append(__get_audio_meta_data(entity=data, URL=URL))
+            playlist.append(__get_audio_meta_data(entity=data, URL=URL, playlist_title=None))
 
         return playlist
