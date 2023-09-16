@@ -1,5 +1,4 @@
-from copy import copy, deepcopy
-from typing import Any, List, Optional, TypedDict, Unpack
+from typing import Any, List, Iterator
 
 from dataclasses import dataclass, field
 
@@ -16,7 +15,7 @@ class FinishedQueue(QueueABC):
         return len(self._queue)
     
 
-    def __iter__(self) -> AudioMetaData:
+    def __iter__(self) -> Iterator[AudioMetaData]:
         for item in self._queue:
             yield item
 
