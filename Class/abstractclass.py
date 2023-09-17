@@ -17,6 +17,10 @@ class QueueABC(metaclass=ABCMeta):
     @abstractmethod
     def queue(self, *args: Unpack[Any], **kwargs: Unpack[TypedDict]) -> Any: ...
 
+    @property
+    @abstractmethod
+    def queue_ownership(self, *args: Unpack[Any], **kwargs: Unpack[TypedDict]) -> Any: ...
+
 
 class StatementQueueAbc(QueueABC, metaclass=ABCMeta):
     @abstractmethod

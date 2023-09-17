@@ -1,4 +1,4 @@
-from typing import Any, List, Iterator
+from typing import Any, List, Iterator, TypedDict, Unpack
 
 from dataclasses import dataclass, field, asdict
 
@@ -65,15 +65,8 @@ class FinishedQueue(StatementQueueAbc):
         self._queue.insert(index, audio)
 
     
-    def clear(self) -> bool:
-        """
-        Returns
-        --------
-        `bool`: `True` If when queue is cleaned else returns `False`
-        """
+    def clear(self) -> None:
         self._queue = []
-
-        return not bool(self._queue)
     
 
     def remove(self, index: int) -> None:
@@ -107,6 +100,13 @@ class FinishedQueue(StatementQueueAbc):
     @property
     def queue(self) -> List[AudioMetaData]:
         return self._queue[:]
+    
+    @property
+    def queue_ownership(self) -> List[AudioMetaData]:
+        ownership = self._queue[:]
+        self.clear()
+        
+        return ownership
     
     @property
     def is_empty(self) -> bool:
@@ -220,15 +220,8 @@ class WaitingQueue(StatementQueueAbc):
         self._queue.insert(index, audio)
 
     
-    def clear(self) -> bool:
-        """
-        Returns
-        --------
-        `bool`: `True` If when queue is cleaned else returns `False`
-        """
+    def clear(self) -> None:
         self._queue = []
-
-        return not bool(self._queue)
     
 
     def remove(self, index: int) -> None:
@@ -263,6 +256,14 @@ class WaitingQueue(StatementQueueAbc):
     def queue(self) -> List[AudioMetaData]:
         return self._queue[:]
     
+    @property
+    def queue_ownership(self) -> List[AudioMetaData]:
+        ownership = self._queue[:]
+        self.clear()
+
+        return ownership
+        
+
     @property
     def is_empty(self) -> bool:
         return not bool(self._queue)
