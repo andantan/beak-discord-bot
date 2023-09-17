@@ -22,7 +22,7 @@ class QueueABC(metaclass=ABCMeta):
     def queue_ownership(self, *args: Unpack[Any], **kwargs: Unpack[TypedDict]) -> Any: ...
 
 
-class StatementQueueAbc(QueueABC, metaclass=ABCMeta):
+class StatementQueueABC(QueueABC, metaclass=ABCMeta):
     @abstractmethod
     def __len__(self) -> Any: ...
 
