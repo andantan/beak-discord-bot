@@ -1,6 +1,6 @@
-from typing import Any, List, Iterator, TypedDict, Unpack
+from typing import Any, List, Generator
 
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 
 from Class.dataclass import AudioMetaData, PlaylistMetaData
 from Class.abstractclass import QueueABC, StatementQueueAbc
@@ -19,7 +19,7 @@ class FinishedQueue(StatementQueueAbc):
         return len(self._queue)
     
 
-    def __iter__(self) -> Iterator[AudioMetaData]:
+    def __iter__(self) -> Generator[AudioMetaData, None, None]:
         for item in self._queue:
             yield item
 
@@ -158,9 +158,10 @@ class WaitingQueue(StatementQueueAbc):
         return len(self._queue)
     
 
-    def __iter__(self) -> Iterator[AudioMetaData]:
+    def __iter__(self) -> Generator[AudioMetaData, None, None]:
         for item in self._queue:
             yield item
+            
 
     @method_dispatch
     def enqueue(self, audio: Any) -> None:

@@ -1,6 +1,6 @@
 import os
 
-from typing import List, Optional, Generic, TypeVar, Any, Dict, Tuple
+from typing import List, Optional, Generic, TypeVar, Any, Dict, Tuple, Generator
 from dataclasses import dataclass, field, asdict, astuple
 
 from deprecated import deprecated
@@ -124,7 +124,7 @@ class PlaylistMetaData:
         return self.length
 
 
-    def __iter__(self) -> AudioMetaData:
+    def __iter__(self) -> Generator[AudioMetaData, None, None]:
         for item in self.playlist:
             yield item
 
