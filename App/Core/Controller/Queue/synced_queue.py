@@ -97,7 +97,7 @@ class FinishedQueue(StatementQueueAbc):
         elif 0 <= index and len(self._queue) <= index:
             raise IndexError(f"Guild identification: {self.identification} => FinishedQueue.seek({index})")
 
-        return AudioMetaData(**asdict(self._queue[index]))
+        return AudioMetaData(**self._queue[index].asdict)
     
 
     @property
@@ -252,7 +252,7 @@ class WaitingQueue(StatementQueueAbc):
         elif 0 <= index and len(self._queue) <= index:
             raise IndexError(f"Guild identification: {self.identification} => WaitingQueue.seek({index})")
 
-        return AudioMetaData(**asdict(self._queue[index]))
+        return AudioMetaData(**self._queue[index].asdict)
     
 
     @property

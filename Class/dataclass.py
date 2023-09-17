@@ -1,7 +1,7 @@
 import os
 
-from typing import List, Optional, Generic, TypeVar, Any, Dict
-from dataclasses import dataclass, field
+from typing import List, Optional, Generic, TypeVar, Any, Dict, Tuple
+from dataclasses import dataclass, field, asdict, astuple
 
 from deprecated import deprecated
 
@@ -103,8 +103,11 @@ class AudioMetaData:
     def purity(self) -> bool:
         return all([getattr(self, v) for v in self.__slots__])
     @property
-    def pseudo_dict(self) -> Dict[str, str]:
-        return {k: getattr(self, k) for k in self.__slots__}
+    def asdict(self) -> Dict[str, str]:
+        return asdict(self)
+    @property
+    def astuple(self) -> Tuple[str]:
+        return astuple(self)
     @property
     def is_dummy(self) -> bool:
         return not any([getattr(self, v) for v in self.__slots__])
