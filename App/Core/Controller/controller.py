@@ -1,4 +1,3 @@
-import logging
 import traceback
 
 from typing import Generator, List, Tuple, TypeAlias, Union
@@ -13,14 +12,17 @@ from .Error.exceptions import (
     AbnormalTypeException,
     EmptyQueueWarning,
 )
-from ..Queue.synced_queue import FinishedQueue, StageQueue, WaitingQueue
+
+from ..Queue.wait import WaitingQueue
+from ..Queue.stage import StageQueue
+from ..Queue.finish import FinishedQueue
 from ..Queue.Error.exceptions import StagedException
 
 from Class.dataclass import AudioMetaData, PlaylistMetaData
 
 
-AwaitableAudioMetaData: TypeAlias = Union[AudioMetaData, PlaylistMetaData, List[AudioMetaData]]
-
+AudiosMetaData: TypeAlias = List[AudioMetaData]
+AwaitableAudioMetaData: TypeAlias = Union[AudioMetaData, PlaylistMetaData, AudiosMetaData]
 
 
 @controller(slots=True, kw_only=True, frozen=True)
@@ -47,7 +49,7 @@ class SyncedQueueController:
         return len(self.finished_queue) + len(self.stage_queue) + len(self.waiting_queue)
     
 
-    def __iter__(self) -> Generator[List[AudioMetaData], None, None]:
+    def __iter__(self) -> Generator[AudiosMetaData, None, None]:
         for queue in self.queues:
             yield queue
 
@@ -79,6 +81,42 @@ class SyncedQueueController:
         except StagedException as ero:
             self.waiting_queue.insert(0, ero.intercepted_audio)
             raise RetriveAudioWarning
+        
+        except Exception:
+            print(traceback.format_exc())
+
+        
+    def restage(self) -> None:
+        try:
+            audio = self.stage_queue.dequeue()
+            self.waiting_queue.insert(index=0, audio=audio)
+
+        except IndexError:
+            raise EmptyQueueWarning(target=self.stage_queue)
+        
+        except TypeError:
+            raise AbnormalTypeException(obj=audio)
+        
+        except StagedException as ero:
+            self.waiting_queue.insert(0, ero.intercepted_audio)
+            raise RetriveAudioWarning
+        
+        except Exception:
+            print(traceback.format_exc())
+
+    
+    def loop(self) -> None:
+        try:
+            ownership: List[AudiosMetaData] = self.queues_ownership
+            looping_audio: AudiosMetaData = list()
+
+            for _ownership in ownership:
+                looping_audio.extend(_ownership)
+            else:
+                self.waiting_queue.enqueue(audio=looping_audio)
+
+        except TypeError:
+            raise AbnormalTypeException(obj=looping_audio)
         
         except Exception:
             print(traceback.format_exc())
@@ -137,9 +175,18 @@ class SyncedQueueController:
         return (len(self.finished_queue), len(self.stage_queue), len(self.waiting_queue))
 
     @property
-    def queues(self) -> List[List[AudioMetaData]]:
+    def queues(self) -> List[AudiosMetaData]:
         return [
             self.finished_queue.queue,
             self.stage_queue.queue,
             self.waiting_queue.queue
         ]
+    
+    @property
+    def queues_ownership(self) -> List[AudiosMetaData]:
+        return [
+            self.finished_queue.queue_ownership,
+            self.stage_queue.queue_ownership,
+            self.waiting_queue.queue_ownership
+        ]
+    
