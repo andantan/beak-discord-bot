@@ -1,5 +1,7 @@
 import traceback
 
+from random import shuffle
+
 from typing import Generator, List, Tuple, TypeAlias, Union
 
 from dataclasses import (
@@ -165,11 +167,29 @@ class SyncedQueueController:
         except Exception:
             print(traceback.format_exc())
 
+
+    def shuffle(self) -> None:
+        try:
+            ownership: List[AudiosMetaData] = self.queue_ownership_exclude_stage
+            looping_audio: AudiosMetaData = list()
+
+            for _ownership in ownership:
+                looping_audio.extend(_ownership)
+            else:
+                shuffle(looping_audio)
+                self.waiting_queue.enqueue(audio=looping_audio)
+
+        except TypeError:
+            raise AbnormalTypeException(obj=looping_audio)
+        
+        except Exception:
+            print(traceback.format_exc())
+
     
     def create_dummy(self) -> None:
         self.waiting_queue.insert(0, audio=AudioMetaData())
 
-
+# . 
     @property
     def size(self) -> Tuple(int):
         return (len(self.finished_queue), len(self.stage_queue), len(self.waiting_queue))
@@ -190,3 +210,10 @@ class SyncedQueueController:
             self.waiting_queue.queue_ownership
         ]
     
+    @property
+    def queue_ownership_exclude_stage(self) -> List[AudiosMetaData]:
+        return [
+            self.finished_queue.queue_ownership,
+            self.waiting_queue.queue_ownership
+        ]
+

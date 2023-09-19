@@ -1,19 +1,19 @@
-from dataclasses import dataclass, field
-from typing import List
-
-@dataclass(slots=True, kw_only=True, frozen=True)
-class case:
-    identification: int
-    queue: List[int] = field(default_factory=list, init=False)
+class Test:
+    def __init__(self) -> None:
+        self.wait = [1, 2, 3]
+        self.stage = [4]
+        self.finish = [5, 6, 7]
 
 
-    def enqueue(self, index: int) -> None:
-        self.queue.append(index)
+    @property
+    def ownership(self, include_stage: bool=False):
+        if include_stage:
+            return [self.wait, self.stage, self.finish]
+        else:
+            return [self.wait, self.finish]
+        
 
+cls = Test()
 
-
-a = case(identification=100)
-
-print(a.queue)
-a.enqueue(10)
-print(a.queue)
+print(cls.ownership)
+print(cls.ownership(True))
