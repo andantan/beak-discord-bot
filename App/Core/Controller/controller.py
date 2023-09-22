@@ -170,7 +170,7 @@ class SyncedQueueController:
 
     def shuffle(self) -> None:
         try:
-            ownership: List[AudiosMetaData] = self.queue_ownership_exclude_stage
+            ownership: List[AudiosMetaData] = self.queues_ownership_exclude_stage
             looping_audio: AudiosMetaData = list()
 
             for _ownership in ownership:
@@ -188,8 +188,15 @@ class SyncedQueueController:
     
     def create_dummy(self) -> None:
         self.waiting_queue.insert(0, audio=AudioMetaData())
+        
+        
+    def reset(self, include_stage: bool=False) -> None:
+        if include_stage:
+            del self.queues_ownership
+        else:
+            del self.queues_ownership_exclude_stage
 
-# . 
+
     @property
     def size(self) -> Tuple(int):
         return (len(self.finished_queue), len(self.stage_queue), len(self.waiting_queue))
@@ -211,7 +218,7 @@ class SyncedQueueController:
         ]
     
     @property
-    def queue_ownership_exclude_stage(self) -> List[AudiosMetaData]:
+    def queues_ownership_exclude_stage(self) -> List[AudiosMetaData]:
         return [
             self.finished_queue.queue_ownership,
             self.waiting_queue.queue_ownership
