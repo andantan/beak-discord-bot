@@ -13,7 +13,6 @@ AudiosMetaData: TypeAlias = List[AudioMetaData]
 
 @dataclass(slots=True, kw_only=True)
 class StageQueue(QueueABC):
-    identification: int
     _queue: AudiosMetaData = field(default_factory=list, init=False)
 
 
@@ -22,12 +21,11 @@ class StageQueue(QueueABC):
     
 
     def enqueue(self, audio: AudioMetaData) -> None:
-        if not isinstance(audio, AudioMetaData):
-            raise TypeError
-   
         if self._queue:
-            bring_out_audios, self._queue = self._queue[1:].append(audio), self._queue[:1]
-
+            bring_out_audios = self._queue[1:]
+            bring_out_audios.append(audio)
+            
+            self._queue = self._queue[:1]
             raise StagedException(intercepted_audio=bring_out_audios)
         
         self._queue.append(audio)
@@ -38,6 +36,7 @@ class StageQueue(QueueABC):
 
         if self._queue:
             bring_out_audios, self._queue = self._queue[:], []
+            bring_out_audios.insert(0, audio)
 
             raise StagedException(intercepted_audio=bring_out_audios)
         
@@ -46,15 +45,15 @@ class StageQueue(QueueABC):
 
     def clear(self) -> None:
         self._queue = []
+        
+        
+    def seek(self) -> AudioMetaData:
+        return AudioMetaData(**self._queue[0].asdict)
 
 
     @property
     def is_empty(self) -> bool:
         return not bool(self._queue)
-    
-    @property
-    def identification(self) -> int:
-        return self.identification
     
     @property
     def queue(self) -> AudiosMetaData:

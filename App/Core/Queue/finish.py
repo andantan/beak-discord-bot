@@ -11,7 +11,6 @@ AudiosMetaData: TypeAlias = List[AudioMetaData]
 
 @dataclass(slots=True, kw_only=True)
 class FinishedQueue(StatementQueueABC):
-    identification: int
     _queue: AudiosMetaData = field(default_factory=list, init=False)
 
     def __len__(self) -> int:
@@ -24,9 +23,6 @@ class FinishedQueue(StatementQueueABC):
 
 
     def enqueue(self, audio: AudioMetaData) -> None:
-        if not isinstance(audio, AudioMetaData):
-            raise TypeError
-        
         self._queue.append(audio)
 
 
@@ -39,18 +35,7 @@ class FinishedQueue(StatementQueueABC):
     
 
     def insert(self, index: int, audio: Union[AudioMetaData, AudiosMetaData]) -> None:
-        if isinstance(audio, AudioMetaData):
-            self._queue.insert(index, audio)
-
-        elif isinstance(audio, list):
-            for element in audio:
-                if not isinstance(element, AudioMetaData):
-                    raise TypeError
-                else:
-                    self._queue = audio.extend(self._queue)
-            
-        else:
-            raise TypeError
+        raise NotImplementedError
         
     
     def clear(self) -> None:
@@ -64,10 +49,6 @@ class FinishedQueue(StatementQueueABC):
     def seek(self, index: int) -> AudioMetaData:
         return AudioMetaData(**self._queue[index].asdict)
     
-
-    @property
-    def identification(self) -> int:
-        return self.identification
     
     @property
     def queue(self) -> AudiosMetaData:

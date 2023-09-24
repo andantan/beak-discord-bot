@@ -1,15 +1,21 @@
+from typing import List
+
 from Class.abstractclass import QueueABC
 from Class.dataclass import AudioMetaData
 
 class ControllerWarning(Warning): ...
 class ControllerException(Exception): ...
 
-class EmptyQueueWarning(ControllerWarning):
-    def __init__(self, *, target: QueueABC) -> None:
-        self.empty_queue = target.__class__
+class EmptyWaitingWarning(ControllerWarning): ...
+class EmptyStageWarning(ControllerWarning): ...
+class EmptyFinishedWarning(ControllerWarning): ...
+
+
+class RetriveAudioWarning(ControllerWarning):
+    def __init__(self, intercepted: List[AudioMetaData]) -> None:
+        self.intercepted = intercepted
         super().__init__()
 
-class RetriveAudioWarning(ControllerWarning): ...
 
 class AbnormalTypeException(ControllerException):
     def __init__(self, *, obj: object) -> None:

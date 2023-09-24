@@ -86,7 +86,6 @@ class GuildProperty:
     message = None
 
 
-
 @dataclass(slots=True, frozen=True, kw_only=True)
 class AudioMetaData:
     title: Optional[str] = field(default=None)
@@ -97,6 +96,10 @@ class AudioMetaData:
     original_url: Optional[str] = field(default=None)
     audio_url: Optional[str] = field(default=None)
     thumbnail_url: Optional[str] = field(default=None)
+    
+    
+    def __str__(self) -> str:
+        return f"AudioMetaData({self.title} - {self.uploader})"
 
 
     @property

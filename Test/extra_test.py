@@ -1,19 +1,20 @@
-class Test:
-    def __init__(self) -> None:
-        self.wait = [1, 2, 3]
-        self.stage = [4]
-        self.finish = [5, 6, 7]
+from typing import (
+    List, Tuple, Dict, 
+    Union, Optional, 
+    TypeAlias, TypeVar, 
+    Generator, MutableSequence
+)
 
 
-    @property
-    def ownership(self, include_stage: bool=False):
-        if include_stage:
-            return [self.wait, self.stage, self.finish]
-        else:
-            return [self.wait, self.finish]
-        
 
-cls = Test()
+T: TypeAlias = TypeVar("T")
 
-print(cls.ownership)
-print(cls.ownership(True))
+TypeInfo: TypeAlias = type
+ImmutableSequence: TypeAlias = Tuple
+a = [1, 2, 3]
+b = (1, 2, 3)
+
+print(isinstance(a, MutableSequence))
+print(isinstance(a, ImmutableSequence))
+print(isinstance(b, MutableSequence))
+print(isinstance(b, ImmutableSequence))

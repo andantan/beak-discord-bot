@@ -11,8 +11,9 @@ from dataclasses import (
 
 from .Error.exceptions import (
     RetriveAudioWarning,
-    AbnormalTypeException,
-    EmptyQueueWarning,
+    EmptyWaitingWarning,
+    EmptyStageWarning,
+    EmptyFinishedWarning
 )
 
 from ..Queue.wait import WaitingQueue
@@ -29,8 +30,6 @@ AwaitableAudioMetaData: TypeAlias = Union[AudioMetaData, PlaylistMetaData, Audio
 
 @controller(slots=True, kw_only=True, frozen=True)
 class SyncedQueueController:
-    guild_identification: int
-
     finished_queue: FinishedQueue = field(init=False)
     stage_queue: StageQueue = field(init=False)
     waiting_queue: WaitingQueue = field(init=False)
@@ -38,9 +37,9 @@ class SyncedQueueController:
 
     def __post_init__(self) -> None:
         attributes = {
-            "finished_queue": FinishedQueue(identification=self.guild_identification),
-            "stage_queue": StageQueue(identification=self.guild_identification),
-            "waiting_queue": WaitingQueue(identification=self.guild_identification)
+            "finished_queue": FinishedQueue(),
+            "stage_queue": StageQueue(),
+            "waiting_queue": WaitingQueue()
         }
 
         for _k, _v in attributes.items():
@@ -57,15 +56,12 @@ class SyncedQueueController:
 
     
     def wait(self, audio: AwaitableAudioMetaData) -> None:
-        try:
-            self.waiting_queue.enqueue(audio=audio)
+        self.waiting_queue.enqueue(audio=audio)
+            
 
-        except TypeError:
-            raise AbnormalTypeException(obj=audio)
+    def priority_wait(self, priority: int, audio: Union[AudioMetaData, AudiosMetaData]) -> None:
+        self.waiting_queue.insert(index=priority, audio=audio)
         
-        except Exception:
-            print(traceback.format_exc())
-
 
     def stage(self) -> None:
         try:
@@ -75,115 +71,51 @@ class SyncedQueueController:
                     break
 
         except IndexError:
-            raise EmptyQueueWarning(target=self.waiting_queue)
-        
-        except TypeError:
-            raise AbnormalTypeException(obj=audio)
+            raise EmptyWaitingWarning
         
         except StagedException as ero:
-            self.waiting_queue.insert(0, ero.intercepted_audio)
-            raise RetriveAudioWarning
+            self.waiting_queue.insert(index=0, audio=ero.intercepted_audio)
+            self.finished_queue.enqueue(audio=self.stage_queue.queue_ownership)
+            self.stage_queue.enqueue(audio=self.waiting_queue.pop(index=0))
         
         except Exception:
             print(traceback.format_exc())
 
         
-    def restage(self) -> None:
-        try:
-            audio = self.stage_queue.dequeue()
-            self.waiting_queue.insert(index=0, audio=audio)
-
-        except IndexError:
-            raise EmptyQueueWarning(target=self.stage_queue)
-        
-        except TypeError:
-            raise AbnormalTypeException(obj=audio)
-        
-        except StagedException as ero:
-            self.waiting_queue.insert(0, ero.intercepted_audio)
-            raise RetriveAudioWarning
-        
-        except Exception:
-            print(traceback.format_exc())
+    def retrive(self) -> None:
+        self.waiting_queue.insert(index=0, audio=self.finished_queue.pop())
 
     
     def loop(self) -> None:
-        try:
-            ownership: List[AudiosMetaData] = self.queues_ownership
-            looping_audio: AudiosMetaData = list()
-
-            for _ownership in ownership:
-                looping_audio.extend(_ownership)
-            else:
-                self.waiting_queue.enqueue(audio=looping_audio)
-
-        except TypeError:
-            raise AbnormalTypeException(obj=looping_audio)
+        self.waiting_queue.enqueue(audio=self.finished_queue.queue_ownership)
         
-        except Exception:
-            print(traceback.format_exc())
-
     
     def leave(self) -> None:
         try:
-            audio = self.stage_queue.dequeue()
-            self.finished_queue.enqueue(audio=audio)
-        
-        except IndexError:
-            raise EmptyQueueWarning(target=self.stage_queue)
-        
-        except TypeError:
-            raise AbnormalTypeException(obj=audio)
-        
+            self.finished_queue.enqueue(audio=self.stage_queue.dequeue())
+            
         except StagedException as ero:
-            self.waiting_queue.insert(0, ero.intercepted_audio)
-            raise RetriveAudioWarning
-
-        except Exception:
-            print(traceback.format_exc())
-
+            self.finished_queue.enqueue(audio=ero.intercepted_audio[0])
+            self.waiting_queue.insert(index=0, audio=ero.intercepted_audio[1:])
+      
 
     def backward(self) -> None:
         try:
             audio = self.stage_queue.dequeue()
     
-        except IndexError:
-            raise EmptyQueueWarning(target=self.stage_queue)
-        
         except StagedException as ero:
-            self.waiting_queue.insert(0, ero.intercepted_audio)
-            raise RetriveAudioWarning
-
-        except Exception:
-            print(traceback.format_exc())
-
-
-        try:
-            self.waiting_queue.insert(index=0, audio=audio)
+            self.waiting_queue.insert(index=0, audio=ero.intercepted_audio)
+            return
         
-        except TypeError:
-            raise AbnormalTypeException(obj=audio)
-        
-        except Exception:
-            print(traceback.format_exc())
+        self.waiting_queue.insert(index=0, audio=audio)
 
 
     def shuffle(self) -> None:
-        try:
-            ownership: List[AudiosMetaData] = self.queues_ownership_exclude_stage
-            looping_audio: AudiosMetaData = list()
-
-            for _ownership in ownership:
-                looping_audio.extend(_ownership)
-            else:
-                shuffle(looping_audio)
-                self.waiting_queue.enqueue(audio=looping_audio)
-
-        except TypeError:
-            raise AbnormalTypeException(obj=looping_audio)
-        
-        except Exception:
-            print(traceback.format_exc())
+        looping_audio = self.finished_queue.queue_ownership + \
+            self.waiting_queue.queue_ownership
+            
+        shuffle(looping_audio)
+        self.waiting_queue.enqueue(audio=looping_audio)
 
     
     def create_dummy(self) -> None:
@@ -200,6 +132,10 @@ class SyncedQueueController:
     @property
     def size(self) -> Tuple(int):
         return (len(self.finished_queue), len(self.stage_queue), len(self.waiting_queue))
+    
+    @property
+    def seek(self) -> AudioMetaData:
+        return self.stage_queue.seek
 
     @property
     def queues(self) -> List[AudiosMetaData]:
@@ -223,4 +159,8 @@ class SyncedQueueController:
             self.finished_queue.queue_ownership,
             self.waiting_queue.queue_ownership
         ]
+        
+    @property
+    def is_waiting_empty(self) -> bool:
+        return not bool(self.waiting_queue.queue)
 
