@@ -1,7 +1,7 @@
 import os
 
-from typing import List, Optional, Generic, TypeVar, Any, Dict
-from dataclasses import dataclass, field
+from typing import List, Optional, Generic, TypeVar, Any, Dict, Tuple, Generator
+from dataclasses import dataclass, field, asdict, astuple
 
 from deprecated import deprecated
 
@@ -86,7 +86,6 @@ class GuildProperty:
     message = None
 
 
-
 @dataclass(slots=True, frozen=True, kw_only=True)
 class AudioMetaData:
     title: Optional[str] = field(default=None)
@@ -97,14 +96,21 @@ class AudioMetaData:
     original_url: Optional[str] = field(default=None)
     audio_url: Optional[str] = field(default=None)
     thumbnail_url: Optional[str] = field(default=None)
+    
+    
+    def __str__(self) -> str:
+        return f"AudioMetaData({self.title} - {self.uploader})"
 
 
     @property
     def purity(self) -> bool:
         return all([getattr(self, v) for v in self.__slots__])
     @property
-    def pseudo_dict(self) -> Dict[str, str]:
-        return {k: getattr(self, k) for k in self.__slots__}
+    def asdict(self) -> Dict[str, str]:
+        return asdict(self)
+    @property
+    def astuple(self) -> Tuple[str]:
+        return astuple(self)
     @property
     def is_dummy(self) -> bool:
         return not any([getattr(self, v) for v in self.__slots__])
@@ -121,7 +127,7 @@ class PlaylistMetaData:
         return self.length
 
 
-    def __iter__(self) -> AudioMetaData:
+    def __iter__(self) -> Generator[AudioMetaData, None, None]:
         for item in self.playlist:
             yield item
 
